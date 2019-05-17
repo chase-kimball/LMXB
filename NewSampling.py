@@ -172,9 +172,9 @@ def generate_bse_binaries_array(args):
 	# Input
 	# fileout :: str, name of output file.
 	# nbin    :: Number of binary pairs to make.
-	fileout = args.binaryfile+'.in'
+	fileout = args.binaryfile
 	nbin = args.Nsys
-        time_to_evolve 	= 100. * u.Myr  # float, Myr. Max evolution time
+	time_to_evolve 	= 100. * u.Myr  # float, Myr. Max evolution time
 	z 				= 0.02 # Metallicity
 	zams.prepare_coefficients(z)
 	sep_max 		= 1.e5  # float.
@@ -198,7 +198,7 @@ def generate_bse_binaries_array(args):
 	dum 		= numpy.zeros([numpy.size(numpy.where(data[:,1] < M2_min)),3])
 	count_limit1 = 1000
 	if numpy.size(dum[:,0]) != 0:
-		print numpy.where(data[:,1] < M2_min)
+		print (numpy.where(data[:,1] < M2_min))
 		dum_index = numpy.where(data[:,1] < M2_min)
 		dum[:,2] 	= dum_index[0] 			# Array indexes.
 		dum[:,0] 	= data[dum[:,2].astype(int),0] 	# M1
@@ -220,7 +220,7 @@ def generate_bse_binaries_array(args):
 				dum[:,0] 	= data[dum[:,2].astype(int),0] # M1
 				dum[:,1] 	= data[dum[:,2].astype(int),1] # M2
 		if count > count_limit1:
-			print 'while loop 1 exceeded count limit of ', count_limit1
+			print ('while loop 1 exceeded count limit of ', count_limit1)
 			
 	#Draw eccentricity
 	data[:,3] 	= random_eccentricity(nbin)
@@ -232,7 +232,7 @@ def generate_bse_binaries_array(args):
 	sep_min 	= rzams1/(rl1*(1.-ecc))
 	
 	#make check that no sep_min > sep_max
-	print '1st: sep_min > sep_max', numpy.size(numpy.where(sep_min.value > sep_max))
+	print ('1st: sep_min > sep_max', numpy.size(numpy.where(sep_min.value > sep_max)))
 
 ##
 	#1 find index in violation
@@ -275,8 +275,8 @@ def generate_bse_binaries_array(args):
 			
 			
 		if count > count_limit2:
-			print 'while loop 2 exceeded count limit of ', count_limit2
-	print '2nd sep_min > sep_max after while loop', numpy.size(numpy.where(sep_min.value > sep_max[0]))
+			print ('while loop 2 exceeded count limit of ', count_limit2)
+	print ('2nd sep_min > sep_max after while loop', numpy.size(numpy.where(sep_min.value > sep_max[0])))
 		
 	# Update data set.
 	ecc 		= data[:,3]

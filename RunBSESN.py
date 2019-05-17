@@ -6,20 +6,24 @@ call = os.system
 import sys
 import subprocess
 import h5py
+import argparse
 sys.path.append("./inits")
 import run_config
+import astropy.units as u
+import astropy.constants as c
 sys.path.append(run_config.LMXB_INSTALL)
 
 def parse_commandline():
-    
+    parser = argparse.ArgumentParser()
+
     parser.add_argument('--i', type=str, required = True)
     parser.add_argument('--ncores', type = int, default = 16)
 
     return parser.parse_args()
 
 def initialize_binary_table(BSE_input):
-    call('python NewSampling.py --Nsys ' + str(run_config.Nbse) + \
-         ' --binaryfile ' + run_config.BSE_input + args.i + \
+    call('python '+run_config.LMXB_INSTALL+'/NewSampling.py --Nsys ' + str(run_config.Nbse) + \
+         ' --binaryfile ' + BSE_input + \
          ' --Mexp ' + str(run_config.Mexp))
     
     data = np.loadtxt(BSE_input,skiprows=1).T
@@ -33,21 +37,21 @@ def initialize_binary_table(BSE_input):
     
     return pd.DataFrame(init_dict)
 def construct_bse_output(bpp,initC):
-    evol_type, tphys, Mpre_temp, MdonSN_temp, kstar_Mpre_temp, kstar_MdonSN_temp,epre,Apre = \
-                                                                bpp.evol_type.values, bpp.tphys.values,\
+    bin_num, evol_type, tphys, Mpre_temp, MdonSN_temp, kstar_Mpre_temp, kstar_MdonSN_temp,epre,Apre = \
+                                                                bpp.bin_num.values,bpp.evol_type.values, bpp.tphys.values,\
                                                                 bpp.mass_1.values,bpp.mass_2.values, \
                                                                 bpp.kstar_1.values,bpp.kstar_2.values,\
                                                                 bpp.ecc.values,bpp.sep.values
     
-    index, M1Zams_temp,M2Zams_temp,PZams,eZams = initC.bin_num.values, initC.mass_1.values, initC.mass_2.values \
+    M1Zams_temp,M2Zams_temp,PZams,eZams =  initC.mass1_binary.values, initC.mass2_binary.values, \
                                        initC.porb.values, initC.ecc.values
-    AZams = period_to_sep(PZams)
     
     i_switch = np.where(evol_type>=16)[0]
     Mpre, MdonSN, kstar_Mpre, kstar_MdonSN = Mpre_temp.copy(), MdonSN_temp.copy(),\
                                              kstar_Mpre_temp.copy(), kstar_MdonSN_temp.copy()
     M1Zams, M2Zams = M1Zams_temp.copy(), M2Zams_temp.copy()
-    
+    AZams = period_to_sep(M1Zams,M2Zams,PZams)
+
     Mpre[i_switch] = MdonSN_temp[i_switch]
     MdonSN[i_switch] = Mpre_temp[i_switch]
     kstar_Mpre[i_switch] = kstar_MdonSN_temp[i_switch]
@@ -57,7 +61,7 @@ def construct_bse_output(bpp,initC):
     
     cols = ['bin_num','M1Zams','M2Zams','AZams','eZams',\
             'evol_type_preSN','tphys','Mpre','MdonSN','kstar_Mpre','kstar_MdonSN','epre','Apre']
-    data = [index, M1Zams, M2Zams, AZams, eZams, \
+    data = [bin_num, M1Zams, M2Zams, AZams, eZams, \
             evol_type, tphys, Mpre, MdonSN, kstar_Mpre, kstar_MdonSN,epre,Apre]
     return pd.DataFrame(dict(zip(cols,data)))
 def get_commit_hashes(run_config):
@@ -68,22 +72,28 @@ def get_commit_hashes(run_config):
     commit_lmxb = subprocess.check_output(batcmd2, shell=True).strip()
     
     return commit_cosmic, commit_lmxb
-
+def period_to_sep(M1,M2,P):
+    G = c.G.value
+    M1 = M1*c.M_sun.value
+    M2 = M2*c.M_sun.value
+    P = P*u.day.to(u.second)
+    A = (G*(M1+M2)*4*(P/np.pi)**2)**1./3.
+    return A*u.m.to(u.Rsun)
 if __name__=='__main__':
     args=parse_commandline()
     commit_cosmic, commit_lmxb = get_commit_hashes(run_config)
     
     BSE_input = run_config.BSE_input+args.i+'.in'
-    BSE_output = runconfig.BSE_output+args.i+'.h5'
+    BSE_output = run_config.BSE_output+args.i+'.h5'
     INITC_input = run_config.INITC_input+args.i+'.h5'
     
-    BSEdict = run_config.BSEdict
+    BSEDict = run_config.BSEDict
 
-    with h5py.File(BSE_ouput,'w') as f:
-        B = f.create_group('BSEdict')
+    with h5py.File(BSE_output,'w') as f:
+        B = f.create_group('BSEDict')
 
         for key in BSEDict.keys():
-            f['BSEdict'][key]=BSEDict[key]
+            f['BSEDict'][key]=BSEDict[key]
             
         f.attrs['COSMIC_git_hash'] = commit_cosmic
         f.attrs['LMXB_git_hash'] = commit_lmxb
@@ -99,11 +109,11 @@ if __name__=='__main__':
     call('rm '+BSE_input)
     
 
-    bpp, bcm, initC  = Evolve.evolve(initialbinarytable=InitTable, BSEDict=BSEDict,nproc=args.ncores,args.i*run_config.Nbse)
+    bpp, bcm, initC  = Evolve.evolve(initialbinarytable=InitialTable, BSEDict=BSEDict,nproc=args.ncores,idx=int(args.i)*run_config.Nbse)
     
     iloc = np.where(((((bpp.evol_type==15) | (bpp.evol_type==15.5)) & (bpp.kstar_2<13)) |
         (((bpp.evol_type==16) | (bpp.evol_type==16.5)) & (bpp.kstar_1<13)))&(bpp.sep>0))[0]
-    bpp_preSN = bpp[iloc]
+    bpp_preSN = bpp.iloc[iloc]
     
     bin_num=bpp.iloc[iloc].index
     initC = initC.set_index('bin_num')
