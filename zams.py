@@ -51,47 +51,50 @@ def prepare_coefficients(z):
 
 
 
-def lzams(m):
-    """A function to evaluate Lzams
-    ( from Tout et al., 1996, MNRAS, 281, 257 ).
-    """
-    
-    
-    if not isinstance(m, u.Quantity):
-        raise ValueError("m must be a Quantity with mass units")
-    m = m.to('Msun')
-    m = m.value
-    
-    
-    mx = np.sqrt(m)
-    l = (msp[1]*m**5*mx + msp[2]*m**11)/(msp[3] + m**3 + msp[4]*m**5 + 
-        msp[5]*m**7 + msp[6]*m**8 + msp[7]*m**9*mx)
-
-    return l*u.Lsun
 
 
 
+def rhe(m):
+    """Equation 3 in Fryer & Kalogera 97"""
+    
+    m = m*u.kg.to(u.M_sun)
+    
+    logr = np.full(m.shape,0)
+    
+    iless = np.where(m<=2.5)
+    igreater = np.where(m>2.5)
+    
+    logr[iless] = 3.0965 - 2.013*np.log10(m[iless])
+    logr[igreater] = 0.0557*(np.log10(m[igreater])-0.172)**-2.5
+    return (10**logr)*u.Rsun.to(u.m)
 def rzams(m):
     """A function to evaluate Rzams
     ( from Tout et al., 1996, MNRAS, 281, 257 ).
     """
 
-    if not isinstance(m, u.Quantity):
-        raise ValueError("m must be a Quantity with mass units")
-    m = m.to('Msun')
-    m = m.value
+
+    m = m*u.kg.to(u.M_sun)
+    
 
     mx = np.sqrt(m)
     r = ((msp[8]*m**2 + msp[9]*m**6)*mx + msp[10]*m**11 + (msp[11] + 
         msp[12]*mx)*m**19)/(msp[13] + msp[14]*m**2 + (msp[15]*m**8 + 
         m**18 + msp[16]*m**19)*mx)
 
-    return r * u.Rsun
+    return r * u.Rsun.to(u.m)
 
 
+def roche_lobe(m1, m2):
+
+
+	q_mass1 = m1 / m2
+	q_mass3 = q_mass1 ** (1.0 / 3.0)
+	q_mass2 = q_mass1 ** (2.0 / 3.0)
+	lobe = (0.49 * q_mass2) / (0.6 * q_mass2 + np.log(1.0 + q_mass3))
+	return lobe  # Dimensionless. In units of orbital separation
 
 
 if __name__ == "__main__":
     prepare_coefficients(0.02)
-    print (lzams(2.*u.Msun), rzams(2.*u.Msun))
-    print (lzams(1.*u.Msun), rzams(1.*u.Msun))
+    print lzams(2.*u.Msun), rzams(2.*u.Msun)
+    print lzams(1.*u.Msun), rzams(1.*u.Msun)
