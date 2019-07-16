@@ -153,8 +153,8 @@ class LMXB_Sys:
          
         
         
-    def getCartesian(self):
-        self.X0, self.Y0, self.Z0, self.U0, self.V0, self.W0 = TrajTools.getXYZUVW(self.ra, self.dec, self.d, self.pm_ra, self.pm_dec, self.v_rad)
-        return self.X0, self.Y0, self.Z0, self.U0, self.V0, self.W0 
+        def getCartesian(self):
+            self.X0, self.Y0, self.Z0, self.U0, self.V0, self.W0 = TrajTools.getXYZUVW(self.ra, self.dec, self.d[0], self.pm_ra[0], self.pm_dec[0], self.v_rad[0])
+        getCartesian(self)
     
     
