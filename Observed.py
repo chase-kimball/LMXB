@@ -147,6 +147,7 @@ class LMXB_Sys:
         self.pm_ra = self.system.get('pm_ra')
         self.pm_dec = self.system.get('pm_dec')
         self.v_rad = self.system.get('v_rad')
+        self.fullname = self.system.get('fullname')
         
         ## Converts into earth centric coordinates
         Sys_gal = SkyCoord(l = self.system.get('l')*u.deg, b = self.system.get('b')*u.deg, frame = 'galactic')
