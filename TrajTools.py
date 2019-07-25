@@ -11,6 +11,32 @@ m_kpc=u.kpc.to(u.m)
 G=C.G.value
 s_year=31556952.0
 
+def potential(x,y,z):
+    x  = x*u.kpc.to(u.m)
+    y  = y*u.kpc.to(u.m)
+    z  = z*u.kpc.to(u.m)
+    Md = 1.45e11*Msun
+    Mb = 9.3e9*Msun
+    Mn = 1e10*Msun
+    bd = 5.5*u.kpc.to(u.m)
+    bb = 0.25*u.kpc.to(u.m)
+    bn = 1.5*u.kpc.to(u.m)
+    h1 = 0.325*u.kpc.to(u.m)
+    h2 = 0.090*u.kpc.to(u.m)
+    h3 = 0.125*u.kpc.to(u.m)
+    aG = 2.4*u.kpc.to(u.m)
+    ß1 = 0.4
+    ß2 = 0.5
+    ß3 = 0.1
+    S1 = ß1*(z**2+h1**2)**0.5
+    S2 = ß2*(z**2+h2**2)**0.5
+    S3 = ß3*(z**2+h3**2)**0.5
+    vd = (-G*Md)/((aG+S1+S2+S3)**2+bd**2+x**2+y**2)**0.5
+    vb = (-G*Mb)/(bb**2+x**2+y**2)**0.5
+    vn = (-G*Mn)/(bn**2+x**2+y**2)**0.5
+    vg = vn+vb+vd
+    return vg
+
 def vdot(t,R):
         M=[(1.45e11)*Msun,(9.3e9)*Msun,(1.0e10)*Msun]
         B=[0.4,0.5,0.1]
