@@ -120,6 +120,8 @@ import Observed #dictionary file
 import TrajTools
 from astropy import units as u
 import numpy as np
+import matplotlib.pyplot as plt
+import pdb
 
 gauss=np.random.normal
 
@@ -150,11 +152,105 @@ class LMXB_Sys:
         Sys_gal = SkyCoord(l = self.system.get('l')*u.deg, b = self.system.get('b')*u.deg, frame = 'galactic')
         self.ra = Sys_gal.icrs.ra.value
         self.dec = Sys_gal.icrs.dec.value
-         
-        
-        
+             
         def getCartesian(self):
             self.X0, self.Y0, self.Z0, self.U0, self.V0, self.W0 = TrajTools.getXYZUVW(self.ra, self.dec, self.d[0], self.pm_ra[0], self.pm_dec[0], self.v_rad[0])
         getCartesian(self)
+        
+    def setRandUVWXYZ(self):
+        self.X0, self.Y0, self.Z0, self.U0, self.V0, self.W0 = TrajTools.getRandXYZUVW(self.ra, self.dec, self.d, self.pm_ra, self.pm_dec, self.v_rad)
+        
+        
+    # Numerical Integrator    
+    def euler(self, R0, dt, T, force_function):
+        time = 0
+        tarr = [time]
+        R = R0
+        print(R)
+        #pdb.set_trace()
+        R_t = [R0] 
+        while np.abs(time) < T:
+            R = R + dt*force_function(time, R)
+            time += dt
+            R_t.append(R)
+            tarr.append(time)
+        R_t = np.array(R_t)
+
+        return R_t.T, np.array(tarr)
     
+    def RK4(self, R0, dt, T, force_function):
+        t = 0
+        tarr = [t]
+        R = R0
+        R_t = [R0] 
+        while np.abs(t) < T:
+            R1 = R
+            t1 = t
+            vdot1 = force_function(t1, R1)
+
+            R2 = R + 0.5*dt*vdot1
+            t2 = t + 0.5*dt
+            vdot2 = force_function(t2, R2)
+
+
+            R3 = R + 0.5*dt*vdot2
+            t3 = t + 0.5*dt
+            vdot3 = force_function(t3, R3)
+
+
+            R4 = R + dt*vdot3
+            t4 = t + dt
+            vdot4 = force_function(t4, R4)
+
+            R = R + (dt/6)*(vdot1 + 2*vdot2 + 2*vdot3 + vdot4)
+            t = t + dt
+
+            R_t.append(R)
+            tarr.append(t)
+
+        R_t = np.array(R_t)
+
+        return R_t.T, np.array(tarr)
+
     
+        #def gravity(R, t):
+            #g = 9.8
+            #return np.array([-g, R[0]])
+        
+        
+    def plotTrajectory(self, T, dt, integrator):
+        
+        R0 = np.array([self.U0*1000, self.V0*1000, self.W0*1000, self.X0*u.kpc.to(u.m), self.Y0*u.kpc.to(u.m), self.Z0*u.kpc.to(u.m)]) 
+        #print(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot(T, R0))
+        R_t, t = integrator(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
+        self.R_t = R_t
+        self.R_t[0] = R_t[0]/1000
+        self.R_t[1] = R_t[1]/1000
+        self.R_t[2] = R_t[2]/1000
+        self.R_t[3] = R_t[3]*u.m.to(u.kpc)
+        self.R_t[4] = R_t[4]*u.m.to(u.kpc)
+        self.R_t[5] = R_t[5]*u.m.to(u.kpc)
+        self.t = t
+        print(self.U0,self.V0,self.W0,self.X0,self.Y0,self.Z0)
+        print(R0)
+        plt.plot(self.R_t[3], self.R_t[4])
+    
+       
+    def getTrajectory(self, T, dt, integrator):
+        
+        R0 = np.array([self.U0*1000, self.V0*1000, self.W0*1000, self.X0*u.kpc.to(u.m), self.Y0*u.kpc.to(u.m), self.Z0*u.kpc.to(u.m)]) 
+        #print(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot(T, R0))
+        R_t, t = integrator(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
+        self.R_t = R_t
+        self.R_t[0] = R_t[0]/1000
+        self.R_t[1] = R_t[1]/1000
+        self.R_t[2] = R_t[2]/1000
+        self.R_t[3] = R_t[3]*u.m.to(u.kpc)
+        self.R_t[4] = R_t[4]*u.m.to(u.kpc)
+        self.R_t[5] = R_t[5]*u.m.to(u.kpc)
+        self.t = t
+        print(R_t)
+        return R_t, t 
+        
+        
+                
