@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) Shrujal Ambati, Richard Ackermann, Chase Kimball (2019)
+#
+# This file is part of the LMXB package
+#
+# LMXB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# progenitor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LMXB.  If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = ['Shrujal Ambati','Richard Ackermann','Chase Kimball']
+
 def getSysDict(sysname):
     Sys_Dict ={
 
@@ -212,18 +232,13 @@ class LMXB_Sys:
         R_t = np.array(R_t)
 
         return R_t.T, np.array(tarr)
-
-    
-        #def gravity(R, t):
-            #g = 9.8
-            #return np.array([-g, R[0]])
         
         
     def plotTrajectory(self, T, dt, integrator):
         
         R0 = np.array([self.U0*1000, self.V0*1000, self.W0*1000, self.X0*u.kpc.to(u.m), self.Y0*u.kpc.to(u.m), self.Z0*u.kpc.to(u.m)]) 
         #print(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot(T, R0))
-        R_t, t = integrator(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
+        R_t, t = integrator(R0,-dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
         self.R_t = R_t
         self.R_t[0] = R_t[0]/1000
         self.R_t[1] = R_t[1]/1000
