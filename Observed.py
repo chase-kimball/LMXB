@@ -167,7 +167,7 @@ class LMXB_Sys:
         time = 0
         tarr = [time]
         R = R0
-        print(R)
+        #print(R)
         #pdb.set_trace()
         R_t = [R0] 
         while np.abs(time) < T:
@@ -241,7 +241,7 @@ class LMXB_Sys:
         
         R0 = np.array([self.U0*1000, self.V0*1000, self.W0*1000, self.X0*u.kpc.to(u.m), self.Y0*u.kpc.to(u.m), self.Z0*u.kpc.to(u.m)]) 
         #print(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot(T, R0))
-        R_t, t = integrator(R0,dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
+        R_t, t = integrator(R0,-dt*u.Gyr.to(u.s),T*u.Gyr.to(u.s), TrajTools.vdot)
         self.R_t = R_t
         self.R_t[0] = R_t[0]/1000
         self.R_t[1] = R_t[1]/1000
