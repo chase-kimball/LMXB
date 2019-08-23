@@ -30,9 +30,10 @@ def parse():
     parser.add_argument('-x', '--arraynum', type=int)
     parser.add_argument('--inputfile', '-f', type=str, default = '/projects/b1095/samimp/lmxb/work/SN/data/BSEOut_1.h5')
     parser.add_argument('--nkicks', type=int, default = 1000)
+    parser.add_argument('--rows', type=int, required=True)
+    parser.add_argument('--BSEnum', type=int)
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 def runSN(arraynum, inputfile, nkicks, rows):
 
@@ -48,7 +49,7 @@ def runSN(arraynum, inputfile, nkicks, rows):
 
     if arraynum is not None:
         rownum = int(len(inputs.index)/20)
-        row1 = args.arraynum * rownum 
+        row1 = arraynum * rownum 
         lastrow = rownum + row1
 
         if lastrow > len(inputs.index):
@@ -67,3 +68,8 @@ def runSN(arraynum, inputfile, nkicks, rows):
 
     SNdata = pd.DataFrame(dict(zip(cols,data)))
     return SNdata
+
+if __name__=='__main__':
+    args = parse()
+    sndata = runSN(args.arraynum, args.inputfile, args.nkicks)
+    sndata.to_hdf('SNOut_{}_BSE_{}'.format(args.arraynum, args.BSEnum), key='sn')
