@@ -126,9 +126,12 @@ if __name__=='__main__':
         preSNbinaries.to_hdf(BSE_output,key='bse')
     
     if args.onlyrun is not None:
-        postSN = SN.runSN(inputfile=BSE_output, nkicks=100, rows=1000) 
-        postSN.to_hdf(SN_output, key='sn')
-
+        call("sed '9i#SBATCH --error=output/" + i + "arrayJob_%A_%a.err' SNsubmit.sh > " + i + "_SNsubmit.sh")
+        call("sed -i '10i#SBATCH --output=output/" + i + "arrayJob_%A_%a.out' " + i + "_SNsubmit.sh")
+        with open(i + "_SNsubmit.sh", a) as f:
+            f.write('python BatchRunSN.py -x ${SLURM_ARRAY_TASK_ID} --nkicks ' + run_config.Nkick + ' --BSEnum' + i + '--rows ' + 1000)
+        #call('sbatch ' + i + '_SNsubmit.sh')
+        
     elif args.onlyrun == 'sn':
         if args.sn_input is None:
             parser.error('sn_input is required when onlyrun = sn')
