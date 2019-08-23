@@ -18,58 +18,52 @@
 
 __author__ = ['Samuel Imperato']
 
-
-
 import eccentricPre as SN
 import pandas as pd
 import numpy as np
 import astropy.units as units
 import argparse
 
-parser = argparse.ArgumentParser()
+def parse():
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('-x', '--arraynum', type=int)
-parser.add_argument('--inputfile', '-f', type=str, default = '/projects/b1095/samimp/lmxb/work/SN/data/BSEOut_1.h5')
-parser.add_argument('--nkicks', type=int, default = 1000)
+    parser.add_argument('-x', '--arraynum', type=int)
+    parser.add_argument('--inputfile', '-f', type=str, default = '/projects/b1095/samimp/lmxb/work/SN/data/BSEOut_1.h5')
+    parser.add_argument('--nkicks', type=int, default = 1000)
 
-args = parser.parse_args()
+    args = parser.parse_args()
+    return args
 
-inputs = pd.read_hdf(args.inputfile, key='bse')
-cols = list(inputs.columns)
+def runSN(arraynum, inputfile, nkicks, rows):
 
-Mhe = inputs['Mpre']
-Mcomp = inputs['MdonSN']
-Apre = inputs['Apre']
-epre = inputs['epre']
+    inputs = pd.read_hdf(inputfile, key='bse')
+    cols = list(inputs.columns)
 
-data = []
+    Mhe = inputs['Mpre']
+    Mcomp = inputs['MdonSN']
+    Apre = inputs['Apre']
+    epre = inputs['epre']
 
-if args.arraynum is not None:
-    rownum = int(len(inputs.index)/20)
-    row1 = args.arraynum * rownum 
-    lastrow = rownum + row1
+    data = []
 
-    if lastrow > len(inputs.index):
-        lastrow = len(inputs.index)
-else:
-    row1 = 0
-    lastrow = len(inputs.index)
+    if arraynum is not None:
+        rownum = int(len(inputs.index)/20)
+        row1 = args.arraynum * rownum 
+        lastrow = rownum + row1
 
-for i in range(row1, lastrow):
-    sys = SN.System(Mcomp[i], Mhe[i], Apre[i], epre[i], Nkick=args.nkicks)
-    sys.SN()
-    for n in range(args.nkicks):
-        data.append({'sn_num': n, 'bin_num': inputs['bin_num'][i], 'M1Zams': inputs['M1Zams'][i], 'M2Zams': inputs['M2Zams'][i], 'AZams': inputs['AZams'][i], 'eZams': inputs['eZams'][i], 'evol_type_preSN': inputs['evol_type_preSN'][i], 'tphys': inputs['tphys'][i], 'kstar_Mpre': inputs['kstar_Mpre'][i], 'kstar_MdonSN': inputs['kstar_MdonSN'][i], 'Mpre': sys.Mhe[n]*units.kg.to(units.M_sun), 'MdonSN': sys.Mcomp[n]*units.kg.to(units.M_sun), 'epre': sys.epre[n], 'Apre': sys.Apre[n]*units.m.to(units.R_sun), 'Mns': sys.Mns[n]*units.kg.to(units.M_sun), 'E_ma': sys.E_ma[n], 'rpre': sys.rpre[n]*units.m.to(units.R_sun), 'Vkick': sys.Vkick[n]*units.m.to(units.km), 'costh': sys.costh[n], 'phi': sys.phi[n], 'Apost': sys.Apost[n]*units.m.to(units.R_sun), 'epost': sys.epost[n], 'VSx': sys.VSx[n]*units.m.to(units.km), 'VSy': sys.VSy[n]*units.m.to(units.km), 'VSz': sys.VSz[n]*units.m.to(units.km), 'V_sys': sys.V_sys[n]*units.m.to(units.km), 'oldSNflag1': sys.oldSNflag1[n], 'SNflag1': sys.SNflag1[n], 'SNflag2': sys.SNflag2[n], 'SNflag3': sys.SNflag3[n], 'SNflag4': sys.SNflag4[n], 'SNflag5': sys.SNflag5[n], 'SNflag6': sys.SNflag6[n], 'SNflag7': sys.SNflag7[n], 'SNflags': np.all([item[n] for item in sys.SNflags])})
-        #if np.all([item[n] for item in sys.SNflags]):
-        #    passdata.append(data[-1])
-        #else:
-        #    faildata.append(data[-1])
+        if lastrow > len(inputs.index):
+            lastrow = len(inputs.index)
+    else:
+        row1 = 0
+        lastrow = rows
 
-df = pd.DataFrame(data)
-#passdf = pd.DataFrame(passdata)
-#faildf = pd.DataFrame(faildata)
+    cols = ['sn_num', 'bin_num', 'M1Zams', 'M2Zams', 'AZams', 'eZams', 'evol_type_preSN', 'tphys', 'kstar_Mpre', 'kstar_MdonSN', 'Mpre', 'MdonSN', 'epre', 'Apre' 'Mns' 'E_ma' 'rpre' 'Vkick', 'costh', 'Apost', 'epost', 'VSx', 'VSy', 'VSz', 'V_sys', 'oldSNflag1', 'SNflag1', 'SNflag2', 'SNflag3', 'SNflag4', 'SNflag5', 'SNflag6', 'SNflag7', 'SNflags']
 
-df.to_hdf('./data/SNdata_{}.h5'.format(args.arraynum), key='SN')
-#passdf.to_hdf('./data/SNdata_{}.h5'.format(args.arraynum), key='pass')
-#faildf.to_hdf('./data/SNdata_{}.h5'.format(args.arraynum), key='fail')
-print(df)
+    for i in range(row1, lastrow):
+        sys = SN.System(Mcomp[i], Mhe[i], Apre[i], epre[i], nkicks)
+        sys.SN()
+        for n in range(nkicks):
+            data.append(n, inputs['bin_num'][i], inputs['M1Zams'][i], inputs['M2Zams'][i], inputs['AZams'][i], inputs['eZams'][i], inputs['evol_type_preSN'][i], inputs['tphys'][i], inputs['kstar_Mpre'][i], sys.Mhe[n], sys.Mcomp[n], sys.epre[n], sys.Apre[n], sys.Mns[n], sys.E_ma[n], sys.rpre[n], sys.Vkick[n], sys.costh[n], sys.phi[n], sys.Apost[n], sys.epost[n], sys.VSx[n], sys.VSy, sys.VSz[n], sys.V_sys[n], sys.oldSNflag1[n], sys.SNflag1[n], sys.SNflag2[n], sys.SNflag3[n], sys.SNflag4[n], sys.SNflag5[n], sys.SNflag6[n], sys.SNflag7[n], np.all([item[n] for item in sys.SNflags]))
+
+    SNdata = pd.DataFrame(dict(zip(cols,data)))
+    return SNdata
