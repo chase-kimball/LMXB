@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons
 import astropy.units as units
 import sys
 sys.path.append('..')
 import eccentricPre as SN
+import pandas as pd
 
 inputs = 50
 threshold = 1
@@ -40,9 +41,9 @@ fig = plt.figure()
 ax = plt.subplot(1,1,1)
 
 rax = plt.axes([0.05, 0.4, 0.1, 0.15]) #play around til it's readable. These are just coordinates for the box where the buttons are displayed
-check = CheckButtons(rax, ('flag1', 'flag2', 'flag3', 'flag4', 'flag5', 'flag6', 'flag7'), (False) * 7) # Name the flags however you want and add as many as you need
+check = CheckButtons(rax, ('flag1', 'flag2', 'flag3', 'flag4', 'flag5', 'flag6', 'flag7'), (False, False, False, False, False, False, False)) # Name the flags however you want and add as many as you need
 
-onPlot, = ax.scatter(df['Apre'], df['epre'],'g.',label='Pass')
+onPlot, = ax.scatter(list(df['Apre']), list(df['epre']),'g.',label='Pass')
 test_dictionary = {
                    "flag1": {'on_off': False, 'flag_array': df['SNflag1']},
                    "flag2": {'on_off': False, 'flag_array': df['SNflag2']}, 
