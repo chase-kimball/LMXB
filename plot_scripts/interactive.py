@@ -3,8 +3,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons
-import eccentricPre as SN
 import astropy.units as units
+import sys
+sys.path.append('..')
+import eccentricPre as SN
+
 inputs = 50
 threshold = 1
 Mcomp = 20
