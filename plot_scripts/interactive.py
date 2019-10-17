@@ -6,9 +6,10 @@ from matplotlib.widgets import CheckButtons
 import eccentricPre as SN
 import astropy.units as units
 inputs = 50
-
+threshold = 1
 Mcomp = 20
 Mhe = 5
+
 ap = np.linspace(20, 70, inputs)
 ep = np.linspace(20, 70, inputs)
 
@@ -24,7 +25,12 @@ df = pd.DataFrame()
 for i in range(inputs**2):
     sys = SN.System(Mcomp, Mhe, Apre[i], epre[i], nk)
     sys.SN()
-    data.append({'Apre': sys.Apre, 'epre': sys.epre, 'oldSNflag1': sys.oldSNflag1, 'SNflag1': sys.SNflag1, 'SNflag2': sys.SNflag2, 'SNflag3': sys.SNflag3, 'SNflag4': sys.SNflag4, 'SNflag5': sys.SNflag5, 'SNflag6': sys.SNflag6, 'SNflag7': sys.SNflag7, 'SNflags': np.all([item for item in sys.SNflags])})
+    data.append({'Apre': sys.Apre[0], 'epre': sys.epre[0], 'oldSNflag1': np.sum(sys.oldSNflag1)>=threshold, 
+                 'SNflag1': np.sum(sys.SNflag1)>=threshold, 'SNflag2': np.sum(sys.SNflag2)>=threshold,
+                 'SNflag3': np.sum(sys.SNflag3)>=threshold, 'SNflag4': np.sum(sys.SNflag4)>=threshold, 
+                 'SNflag5': np.sum(sys.SNflag5)>=threshold, 'SNflag6': np.sum(sys.SNflag6)>=threshold, 
+                 'SNflag7': np.sum(sys.SNflag7)>=threshold})
+    
 df = pd.DataFrame(data)
 
 fig = plt.figure()
