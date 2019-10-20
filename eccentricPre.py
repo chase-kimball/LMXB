@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) Charles Kimball and Michael Zevin (2018)
+# Copyright (C) Charles Kimall and Michael Zevin (2018)
 #
 # This file is part of the progenitor package.
 #
@@ -178,10 +178,10 @@ class System:
 
             #SNflag4: Eq 26 "An upper limit on the mass of the BH progenitor can be derived from the condition that the
             #azimuthal direction of the kick is real (Fryer & Kalogera 1997)"
-            self.oldSNflag4 = np.full(self.SNflag3.shape,0)
+            self.SNflag4 = np.full(self.SNflag3.shape,0)
             ieGT1 = np.where((epost>1)|(epost<0))[0]
             ieLT1 = np.where(epost<=1)[0]
-            self.oldSNflag4[ieGT1] = False
+            self.SNflag4[ieGT1] = False
             kvar=2*(Apost[ieLT1]/Apre[ieLT1])-(((Vkick[ieLT1]**2)*Apost[ieLT1]/(G*Mtot_post[ieLT1]))+1)
 
             tmp1 = kvar**2 * Mtot_post[ieLT1] * (Apre[ieLT1]/Apost[ieLT1])
@@ -189,10 +189,7 @@ class System:
             tmp3 = - 2 * (Apost[ieLT1]/Apre[ieLT1]) * np.sqrt(1-epost[ieLT1]**2) * np.sqrt((Apost[ieLT1]/Apre[ieLT1])**2 * (1-epost[ieLT1]**2) - kvar)
             prgmax = -Mcomp[ieLT1] + tmp1 / (tmp2 + tmp3)
 
-            self.oldSNflag4[ieLT1] = Mhe[ieLT1] <= prgmax
-
-            self.SNflag4 = (Mhe <= -Mcomp + kvar**2 * (Mtot_post) * Apre/Apost * 1/(2*Apost/Apre*np.sqrt(1-epost**2) * np.sqrt((Apost/Apre)**2 * (1-epost**2) - kvar))
-
+            self.SNflag4[ieLT1] = Mhe[ieLT1] <= prgmax
             # FIX ME: additionally, Kalogera 1996 mentions requirement that NS stars don't collide
             # Apost*(1-epost)> Rns1+Rns2    (eq 16 in that paper)
             # Is there analytic expression for NS radius?
@@ -207,6 +204,12 @@ class System:
             self.SNflags = [self.SNflag1, self.SNflag2, self.SNflag3, self.SNflag4, self.SNflag5, self.SNflag6, self.SNflag7]
 
         SNCheck(self)
-        self.Mns, self.Mcomp, self.Mhe = np.asarray([self.Mns,self.Mcomp,self.Mhe])*u.kg.to(u.M_sun)
-        self.Vkick, self.VSx, self.VSy, self.VSz, self.V_sys = np.asarray([self.Vkick,self.VSx,self.VSy,self.VSz,self.V_sys])*u.km.to(u.m)
-        self.Apre, self.Apost, self.rpre = np.asarray([self.Apre,self.Apost,self.rpre])*u.m.to(u.R_sun)
+        #self.Mns, self.Mcomp, self.Mhe = np.asarray([self.Mns,self.Mcomp,self.Mhe])*u.kg.to(u.M_sun)
+        #self.Vkick = self.Vkick*u.km.to(u.m)
+        #self.Apre = self.Apre*u.m.to(u.R_sun)
+        #self.Apost = self.Apost*u.m.to(u.R_sun)
+
+    
+
+
+
