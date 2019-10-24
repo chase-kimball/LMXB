@@ -30,7 +30,7 @@ import astropy.constants as constants
 from scipy.integrate import ode
 from scipy.integrate import quad
 from scipy.optimize import brentq
-import zams2 as zams
+import zams as zams
 
 class System:
     """
