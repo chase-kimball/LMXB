@@ -1,9 +1,6 @@
 import numpy as np
 import matplotlib
-<<<<<<< HEAD
-=======
-matplotlib.use('TkAgg')
->>>>>>> 38f287210bce1e1e19a8f36c4c435fc0c662eb09
+
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons
 import astropy.units as units
