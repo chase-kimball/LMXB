@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib
-
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons
 import astropy.units as units
@@ -32,7 +32,7 @@ for i in range(inputs**2):
     data.append({'Apre': sys.Apre[0], 'epre': sys.epre[0], 'oldSNflag1': np.sum(sys.oldSNflag1)>=threshold, 
                  'SNflag1': np.sum(sys.SNflag1)>=threshold, 'SNflag2': np.sum(sys.SNflag2)>=threshold,
                  'SNflag3': np.sum(sys.SNflag3)>=threshold, 'SNflag4': np.sum(sys.SNflag4)>=threshold,
-                 'oldSNflag4': np.sum(sys.oldSNflag4)>=threshold,
+#                 'oldSNflag4': np.sum(sys.oldSNflag4)>=threshold,
                  'SNflag5': np.sum(sys.SNflag5)>=threshold, 'SNflag6': np.sum(sys.SNflag6)>=threshold, 
                  'SNflag7': np.sum(sys.SNflag7)>=threshold})
     
@@ -41,11 +41,12 @@ df = pd.DataFrame(data)
 fig = plt.figure()
 ax = plt.subplot(1,1,1)
 
-rax = plt.axes([0.05, 0.4, 0.1, 0.15]) #play around til it's readable. These are just coordinates for the box where the buttons are displayed
-check = CheckButtons(rax, ('flag1', 'flag2', 'flag3', 'flag4', 'flag5', 'flag6', 'flag7'), [False] * 7) # Name the flags however you want and add as many as you need
+rax = plt.axes([0.01, 0.4, 0.1, 0.15]) #play around til it's readable. These are just coordinates for the box where the buttons are displayed
+check = CheckButtons(rax, ('oldflag1', 'flag1', 'flag2', 'flag3', 'flag4', 'flag5', 'flag6', 'flag7'), [False] * 8) # Name the flags however you want and add as many as you need
 
 onPlot, = ax.plot(df['Apre'], df['epre'],'g.',label='Pass')
 test_dictionary = {
+                   "oldflag1": {'on_off': False, 'flag_array': df['oldSNflag1']},
                    "flag1": {'on_off': False, 'flag_array': df['SNflag1']},
                    "flag2": {'on_off': False, 'flag_array': df['SNflag2']}, 
                    "flag3": {'on_off': False, 'flag_array': df['SNflag3']},
@@ -75,7 +76,7 @@ def func(label):
     Ion = np.where(Ion)[0]
     print(df['Apre'].values[Ion])
     onPlot.set_data(df['Apre'].values[Ion],df['epre'].values[Ion])
-    
+ 
     plt.draw()
 check.on_clicked(func)
 plt.show()
