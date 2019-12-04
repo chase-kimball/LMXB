@@ -34,4 +34,5 @@ fdf = df[df['SNflag4'] == False]
 print df['phi']
 print fdf['phi']
 plt.hist(fdf['phi']) 
+plt.title('Phi Where Flag4 Fails')
 plt.show()
