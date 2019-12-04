@@ -11,7 +11,7 @@ import pandas as pd
 inputs = 50
 threshold = 1
 Mcomp = 20
-Mhe = 5
+Mhe = 15
 
 ap = np.linspace(20, 70, inputs)
 ep = np.linspace(0, .99, inputs)
@@ -21,20 +21,22 @@ apx, epy = np.meshgrid(ap, ep)
 Apre = apx.flatten()
 epre = epy.flatten()
 
-nk = 10
+nk = 1
 data = []
 df = pd.DataFrame()
+
+flags = ['oldSNflag1', 'SNflag1', 'SNflag2', 'SNflag3', 'SNflag4', 'SNflag5', 'SNflag6', 'SNflag7', 'ApostGT0']
 
 for i in range(inputs**2):
     print(Mcomp, Mhe, Apre, epre)
     sys = SN.System(Mcomp, Mhe, Apre[i], epre[i], nk)
     sys.SN()
-    data.append({'Apre': sys.Apre[0], 'epre': sys.epre[0], 'oldSNflag1': np.sum(sys.oldSNflag1)>=threshold, 
-                 'SNflag1': np.sum(sys.SNflag1)>=threshold, 'SNflag2': np.sum(sys.SNflag2)>=threshold,
-                 'SNflag3': np.sum(sys.SNflag3)>=threshold, 'SNflag4': np.sum(sys.SNflag4)>=threshold,
-#                 'oldSNflag4': np.sum(sys.oldSNflag4)>=threshold,
-                 'SNflag5': np.sum(sys.SNflag5)>=threshold, 'SNflag6': np.sum(sys.SNflag6)>=threshold, 
-                 'SNflag7': np.sum(sys.SNflag7)>=threshold})
+    data.append({'Apre': sys.Apre[0], 'Apost': sys.Apost[0], 'epre': sys.epre[0],
+                 flags[0]: np.sum(sys.oldSNflag1)>=threshold, 
+                 flags[1]: np.sum(sys.SNflag1)>=threshold, flags[2]: np.sum(sys.SNflag2)>=threshold,
+                 flags[3]: np.sum(sys.SNflag3)>=threshold, flags[4]: np.sum(sys.SNflag4)>=threshold,
+                 flags[5]: np.sum(sys.SNflag5)>=threshold, flags[6]: np.sum(sys.SNflag6)>=threshold, 
+                 flags[7]: np.sum(sys.SNflag7)>=threshold, flags[8]: sys.Apost[0] > 0})
     
 df = pd.DataFrame(data)
 
@@ -42,20 +44,12 @@ fig = plt.figure()
 ax = plt.subplot(1,1,1)
 
 rax = plt.axes([0.01, 0.4, 0.1, 0.15]) #play around til it's readable. These are just coordinates for the box where the buttons are displayed
-check = CheckButtons(rax, ('oldflag1', 'flag1', 'flag2', 'flag3', 'flag4', 'flag5', 'flag6', 'flag7'), [False] * 8) # Name the flags however you want and add as many as you need
+check = CheckButtons(rax, flags, [False] * 9) # Name the flags however you want and add as many as you need
 
-onPlot, = ax.plot(df['Apre'], df['epre'],'g.',label='Pass')
-test_dictionary = {
-                   "oldflag1": {'on_off': False, 'flag_array': df['oldSNflag1']},
-                   "flag1": {'on_off': False, 'flag_array': df['SNflag1']},
-                   "flag2": {'on_off': False, 'flag_array': df['SNflag2']}, 
-                   "flag3": {'on_off': False, 'flag_array': df['SNflag3']},
-                   "flag4": {'on_off': False, 'flag_array': df['SNflag4']},
-                   "flag5": {'on_off': False, 'flag_array': df['SNflag5']}, 
-                   "flag6": {'on_off': False, 'flag_array': df['SNflag6']},
-                   "flag7": {"on_off": False, 'flag_array': df['SNflag7']}
-                   }
+onPlot, = ax.plot(df['Apre']/df['Apost'], df['epre'],'g.',label='Pass')
 
+test_dictionary = {key: {'on_off': False, 'flag_array': df[key]} for key in flags}
+ 
 def func(label):
     global Ion
     global Ioff
@@ -75,7 +69,7 @@ def func(label):
             Ion *= test_dictionary[key]['flag_array']
     Ion = np.where(Ion)[0]
     print(df['Apre'].values[Ion])
-    onPlot.set_data(df['Apre'].values[Ion],df['epre'].values[Ion])
+    onPlot.set_data(df['Apre'].values[Ion]/df['Apost'].values[Ion],df['epre'].values[Ion])
  
     plt.draw()
 check.on_clicked(func)
