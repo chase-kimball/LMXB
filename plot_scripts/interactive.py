@@ -46,6 +46,7 @@ ax = plt.subplot(1,1,1)
 rax = plt.axes([0.01, 0.4, 0.1, 0.15]) #play around til it's readable. These are just coordinates for the box where the buttons are displayed
 check = CheckButtons(rax, flags, [False] * 9) # Name the flags however you want and add as many as you need
 
+Plot, = ax.plot(df['Apre']/df['Apost'], df['epre'],'k.',label='Fail')
 onPlot, = ax.plot(df['Apre']/df['Apost'], df['epre'],'g.',label='Pass')
 
 test_dictionary = {key: {'on_off': False, 'flag_array': df[key]} for key in flags}
@@ -73,4 +74,6 @@ def func(label):
  
     plt.draw()
 check.on_clicked(func)
+plt.xlabel('ApreSN/ApostSN')
+plt.ylabel('EpreSN')
 plt.show()
