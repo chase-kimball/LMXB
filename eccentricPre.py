@@ -58,17 +58,17 @@ class System:
         self.sys_flag = sys_flag
         self.Nkick = Nkick
 
-        if np.any(Vkick): self.Vkick = Vkick*units.km.to(units.m)
+        if Vkick is not None: self.Vkick = Vkick*units.km.to(units.m)
         else: self.Vkick = np.random.uniform(0,1000,self.Nkick)*units.km.to(units.m)
-        if np.any(phi): self.phi = phi
+        if phi is not None: self.phi = phi
         else: self.phi = np.random.uniform(0,2*np.pi,self.Nkick)
 
-        if np.any(costh): self.costh = costh
+        if costh is not None: self.costh = costh
         else: self.costh = np.random.uniform(-1,1,self.Nkick)
-        if np.any(Mns): self.Mns = Mns*units.M_sun.to(units.kg)
+        if Mns is not None: self.Mns = Mns*units.M_sun.to(units.kg)
         else: self.Mns = np.random.uniform(3.,Mhe,self.Nkick)*units.M_sun.to(units.kg)
             
-        if np.any(th_ma): self.th_ma = th_ma
+        if th_ma is not None: self.th_ma = th_ma
         else: self.th_ma = np.random.uniform(0,2*np.pi,self.Nkick)
         self.E_ma =np.array([brentq(lambda x:ma -x + epre*np.sin(x),0,2*np.pi) for ma in self.th_ma])
         self.rpre = Apre*(1.-epre*np.cos(self.E_ma))*units.R_sun.to(units.m)
