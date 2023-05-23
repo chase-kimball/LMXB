@@ -11,6 +11,7 @@ sys.path.append("./inits")
 import run_config
 import astropy.units as u
 import astropy.constants as c
+import BatchRunSN as SN
 sys.path.append(run_config.LMXB_INSTALL)
 
 def parse_commandline():
@@ -18,7 +19,9 @@ def parse_commandline():
 
     parser.add_argument('--i', type=str, required = True)
     parser.add_argument('--ncores', type = int, default = 16)
-
+    parser.add_argument('--onlyrun', type=str, choices=['bse', 'sn'])
+    parser.add_argument('--sn_input', type=str)
+    
     return parser.parse_args()
 
 def initialize_binary_table(BSE_input):
@@ -77,7 +80,7 @@ def period_to_sep(M1,M2,P):
     M1 = M1*c.M_sun.value
     M2 = M2*c.M_sun.value
     P = P*u.day.to(u.second)
-    A = (G*(M1+M2)*4*(P/np.pi)**2)**1./3.
+    A = (G*(M1+M2)*4*(P/np.pi)**2)**(1./3.)
     return A*u.m.to(u.Rsun)
 if __name__=='__main__':
     args=parse_commandline()
@@ -86,7 +89,8 @@ if __name__=='__main__':
     BSE_input = run_config.BSE_input+args.i+'.in'
     BSE_output = run_config.BSE_output+args.i+'.h5'
     INITC_input = run_config.INITC_input+args.i+'.h5'
-    
+    SN_output = run_config.SN_output+args.i+'.h5'
+
     BSEDict = run_config.BSEDict
 
     with h5py.File(BSE_output,'w') as f:
@@ -101,27 +105,36 @@ if __name__=='__main__':
         f.attrs['Nbse'] = run_config.Nbse
         f.attrs['Mexp'] = run_config.Mexp
     
+    if args.onlyrun is not None or args.onlyrun == 'bse':
 
-
+        InitialTable = initialize_binary_table(BSE_input)
+        call('rm '+BSE_input)
     
+        bpp, bcm, initC  = Evolve.evolve(initialbinarytable=InitialTable, BSEDict=BSEDict,nproc=args.ncores,idx=int(args.i)*run_config.Nbse)
     
-    InitialTable = initialize_binary_table(BSE_input)
-    call('rm '+BSE_input)
+        iloc = np.where(((((bpp.evol_type==15) | (bpp.evol_type==15.5)) & (bpp.kstar_2<13)) |
+            (((bpp.evol_type==16) | (bpp.evol_type==16.5)) & (bpp.kstar_1<13)))&(bpp.sep>0))[0]
+        bpp_preSN = bpp.iloc[iloc]
     
-
-    bpp, bcm, initC  = Evolve.evolve(initialbinarytable=InitialTable, BSEDict=BSEDict,nproc=args.ncores,idx=int(args.i)*run_config.Nbse)
+        bin_num=bpp.iloc[iloc].index
+        initC = initC.set_index('bin_num')
+        initC_preSN = initC.loc[bin_num]
+        initC_preSN.to_hdf(INITC_input,key='initC')
     
-    iloc = np.where(((((bpp.evol_type==15) | (bpp.evol_type==15.5)) & (bpp.kstar_2<13)) |
-        (((bpp.evol_type==16) | (bpp.evol_type==16.5)) & (bpp.kstar_1<13)))&(bpp.sep>0))[0]
-    bpp_preSN = bpp.iloc[iloc]
+        preSNbinaries = construct_bse_output(bpp_preSN,initC_preSN)
     
-    bin_num=bpp.iloc[iloc].index
-    initC = initC.set_index('bin_num')
-    initC_preSN = initC.loc[bin_num]
-    initC_preSN.to_hdf(INITC_input,key='initC')
+        preSNbinaries.to_hdf(BSE_output,key='bse')
     
-    preSNbinaries = construct_bse_output(bpp_preSN,initC_preSN)
-    
-    
-    preSNbinaries.to_hdf(BSE_output,key='bse')
-    
+    if args.onlyrun is not None:
+        call("sed '9i#SBATCH --error=output/" + i + "arrayJob_%A_%a.err' SNsubmit.sh > " + i + "_SNsubmit.sh")
+        call("sed -i '10i#SBATCH --output=output/" + i + "arrayJob_%A_%a.out' " + i + "_SNsubmit.sh")
+        with open(i + "_SNsubmit.sh", a) as f:
+            f.write('python BatchRunSN.py -x ${SLURM_ARRAY_TASK_ID} --nkicks ' + run_config.Nkick + ' --BSEnum' + i + '--rows ' + 1000)
+        #call('sbatch ' + i + '_SNsubmit.sh')
+        
+    elif args.onlyrun == 'sn':
+        if args.sn_input is None:
+            parser.error('sn_input is required when onlyrun = sn')
+        else:
+            postSN = SN.runSN(args.i, args.sn_input, 100, 1000)
+            postSN.to_hdf(SN_output,key='sn')
